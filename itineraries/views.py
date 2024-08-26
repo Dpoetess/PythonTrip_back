@@ -18,7 +18,6 @@ class ItineraryView(viewsets.ModelViewSet):
         return super(ItineraryView, self).get_permissions()
 
 
-
 # Vista para listar itinerarios
 class ItineraryListView(ListView):
     model = Itinerary
