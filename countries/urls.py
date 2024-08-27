@@ -4,7 +4,7 @@ from .views import CountryViewSet, LocationViewSet, AttractionViewSet
 
 router = DefaultRouter()
 router.register(r'countries', CountryViewSet)
-router.register(r'locations', LocationViewSet)
+router.register(r'countries', LocationViewSet)
 router.register(r'attractions', AttractionViewSet)
 
 urlpatterns = [
