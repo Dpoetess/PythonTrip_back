@@ -9,6 +9,7 @@ class Itinerary(models.Model):
     description = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     is_collaborative = models.BooleanField(default=False)
+    collaborators = models.ManyToManyField(User, related_name='collaborated_itineraries', blank=True)
 
     def __str__(self):
         return self.name

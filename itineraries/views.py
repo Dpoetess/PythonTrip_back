@@ -1,9 +1,14 @@
-from rest_framework import viewsets, permissions, generics
+from django.db.models import Q
+from django.core.mail import send_mail
+from rest_framework import viewsets, permissions
+from rest_framework.authtoken.admin import User
+from rest_framework.decorators import action
+from rest_framework.exceptions import PermissionDenied, NotFound
+from rest_framework.response import Response
+
 from .models import Itinerary
 from .serializer import ItinerarySerializer
-from django.urls import reverse_lazy
-from django.views.generic import ListView, CreateView, UpdateView, DeleteView
-from .forms import ItineraryForm
+
 
 # Create your views here.
 class ItineraryView(viewsets.ModelViewSet):
@@ -14,33 +19,84 @@ class ItineraryView(viewsets.ModelViewSet):
         if self.request.method == 'GET':
             self.permission_classes = [permissions.AllowAny]
         else:
-            self.permission_classes = [permissions.IsAdminUser]
+            self.permission_classes = [permissions.IsAuthenticated]
         return super(ItineraryView, self).get_permissions()
 
+    def perform_create(self, serializer):
+        # Automatically associate the itinerary with the logged-in user as the creator
+        serializer.save(user=self.request.user)
 
-# Vista para listar itinerarios
-class ItineraryListView(ListView):
-    model = Itinerary
-    template_name = 'itineraries/itinerary_list.html'
-    context_object_name = 'itineraries'
+    def perform_delete(self, instance):
+        # Check if the user is the owner of the itinerary before deleting
+        if instance.user == self.request.user or self.request.user in instance.collaborators.all() or self.request.user.is_staff:
+            instance.delete()
+        else:
+            raise PermissionDenied("You are not allowed to delete this itinerary.")
 
-# Vista para añadir un nuevo itinerario
-class ItineraryCreateView(CreateView):
-    model = Itinerary
-    form_class = ItineraryForm
-    template_name = 'itineraries/itinerary_form.html'
-    success_url = reverse_lazy('itinerary-list')
-    title = "Add New Itinerary"
+    def perform_update(self,
+                       serializer):  # Ensure that users can only update itineraries they created or collaborate on
+        if serializer.instance.user == self.request.user or self.request.user in serializer.instance.collaborators.all():
+            serializer.save()
+        else:
+            raise PermissionDenied("You are not allowed to edit this itinerary.")
 
-# Vista para editar un itinerario existente
-class ItineraryUpdateView(UpdateView):
-    model = Itinerary
-    form_class = ItineraryForm
-    template_name = 'itineraries/itinerary_form.html'
-    success_url = reverse_lazy('itinerary-list')
-    title = "Edit Itinerary"
-# Vista para borrar un itinerario existente
-class ItineraryDeleteView(DeleteView):
-    model = Itinerary
-    template_name = 'itineraries/itinerary_confirm_delete.html'
-    success_url = reverse_lazy('itinerary-list')
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
+    def save_itinerary(self, request, pk=None):
+        # Allows users to save itineraries to their saved list
+        itinerary = self.get_object()
+        user_profile = request.user.userprofile  # Assuming UserProfile is linked
+        user_profile.saved_itineraries.add(itinerary)
+        user_profile.save()
+        return Response({"status": "itinerary saved"})
+
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
+    def remove_saved_itinerary(self, request, pk=None):
+        # Allows users to remove itineraries from their saved list
+        itinerary = self.get_object()
+        user_profile = request.user.userprofile
+        user_profile.saved_itineraries.remove(itinerary)
+        user_profile.save()
+        return Response({"status": "itinerary removed from saved"})
+
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
+    def add_collaborator(self, request, pk=None):
+        itinerary = self.get_object()
+        email_or_username = request.data.get('email_or_username')
+        try:
+            collaborator = User.objects.get(
+                Q(email=email_or_username) | Q(username=email_or_username)
+            )
+        except User.DoesNotExist:
+            raise NotFound("User with that email or username does not exist.")
+
+        if request.user == itinerary.user or request.user in itinerary.collaborators.all():
+            itinerary.collaborators.add(collaborator)
+
+            # Enviar correo electrónico al nuevo colaborador
+            subject = f"You hace been added as a collaborator on the itinerary '{itinerary.name}'"
+            message = f"Hello {collaborator.username},\n\n" \
+                      f"You have benn added as a collaborator on the itinerary '{itinerary.name}'.\n" \
+                      "You can access and collaborate on this itinerary from your account.\n\n" \
+                      "Greetings,\nItineraries' team"
+            from_email = 'josecarloslopezgomez1@gmail.com'
+            recipient_list = [collaborator.email]
+
+            send_mail(subject, message, from_email, recipient_list)
+
+            return Response({"status": "collaborator added"})
+        else:
+            raise PermissionDenied("You are not allowed to add collaborators to this itinerary.")
+
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
+    def remove_collaborator(self, request, pk=None):
+        itinerary = self.get_object()
+        email_or_username = request.data.get('email_or_username')
+        collaborator = User.objects.get(
+            Q(email=email_or_username) | Q(username=email_or_username)
+            )
+
+        if request.user == itinerary.user or request.user == collaborator:
+            itinerary.collaborators.remove(collaborator)
+            return Response({"status": "collaborator removed"})
+        else:
+            raise PermissionDenied("You are not allowed to remove collaborators from this itinerary")
