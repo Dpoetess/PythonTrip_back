@@ -1,5 +1,4 @@
 from django.db import models
-from django.contrib.auth.models import User
 
 class Country(models.Model):
     country_id = models.AutoField(primary_key=True),
