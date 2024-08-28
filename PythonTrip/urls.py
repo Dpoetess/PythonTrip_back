@@ -23,6 +23,7 @@ urlpatterns = [
     path(BASE_URL, include('users.urls')),
     path(BASE_URL, include('itineraries.urls')),
     path(BASE_URL, include('countries.urls')),
-    path(BASE_URL, include('preferences.urls'))
+    path(BASE_URL, include('preferences.urls')),
+    path(BASE_URL, include('mycollections.urls'))
 
 ]
