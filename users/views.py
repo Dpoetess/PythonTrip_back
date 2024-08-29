@@ -4,8 +4,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
-from .serializer import RegisterSerializer, LoginSerializer
-
+from .serializer import RegisterSerializer, LoginSerializer, UserDetailSerializer
 
 class RegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
@@ -44,7 +43,7 @@ class LogoutView(views.APIView):
 
 class UserDetailView(generics.RetrieveAPIView):
     queryset = User.objects.all()
-    serializer_class = RegisterSerializer
+    serializer_class = UserDetailSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_object(self):
