@@ -33,8 +33,8 @@ class ItineraryView(viewsets.ModelViewSet):
         else:
             raise PermissionDenied("You are not allowed to delete this itinerary.")
 
-    def perform_update(self,
-                       serializer):  # Ensure that users can only update itineraries they created or collaborate on
+    def perform_update(self, serializer):
+         # Ensure that users can only update itineraries they created or collaborate on
         if serializer.instance.user == self.request.user or self.request.user in serializer.instance.collaborators.all():
             serializer.save()
         else:
