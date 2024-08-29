@@ -30,7 +30,7 @@ class UserLoginView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-"""class LogoutView(views.APIView):
+class LogoutView(views.APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
@@ -39,4 +39,13 @@ class UserLoginView(APIView):
             token.delete()
             return Response({"message": "Token deleted"}, status=status.HTTP_200_OK)
         except Token.DoesNotExist:
-            return Response({"message": "Token not found"}, status=status.HTTP_400_BAD_REQUEST)"""
+            return Response({"message": "Token not found"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class UserDetailView(generics.RetrieveAPIView):
+    queryset = User.objects.all()
+    serializer_class = RegisterSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_object(self):
+        return self.request.user
