@@ -1,7 +1,8 @@
 from django.db import models
 
 class Country(models.Model):
-    country_id = models.AutoField(primary_key=True),
+    country_id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=255, default='Unnamed Country')
     iso_code = models.CharField(max_length=3, unique=True)
 
     def __str__(self):
