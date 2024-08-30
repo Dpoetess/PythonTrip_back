@@ -27,6 +27,7 @@ class Attraction(models.Model):
     attr_description = models.TextField(blank=True, null=True)
     attr_category_id = models.IntegerField()
     attr_image_url = models.URLField(blank=True, null=True)
+    location = models.ForeignKey(Location, on_delete=models.CASCADE, related_name='attractions', null=True, blank=True)
 
     def __str__(self):
         return self.attr_name
