@@ -48,4 +48,8 @@ class UserDetailView(generics.RetrieveAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_object(self):
-        return self.request.user
+        user = self.request.user
+        if user.is_authenticated:
+            print(f"Authenticated user: {user}")
+            return user
+        return None
