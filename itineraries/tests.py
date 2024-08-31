@@ -1,94 +1,125 @@
-"""import pytest
 from django.urls import reverse
 from rest_framework import status
-from rest_framework.test import APIClient
-from itineraries.models import Itinerary
+from rest_framework.test import APITestCase
 from django.contrib.auth.models import User
 from rest_framework.authtoken.models import Token
+from itineraries.models import Itinerary
 
-@pytest.fixture
-def api_client():
-    return APIClient()
+class BaseTestCase(APITestCase):
+    """
+    Base class for tests with common setup and utility methods.
+    """
 
-@pytest.fixture
-def user():
-    return User.objects.create_user(username='testuser', password='password123')
+    def setUp(self):
+        """
+        Common setup for all tests.
+        """
+        self.user = User.objects.create_user(
+            username='testuser',
+            email='testuser@example.com',
+            password='password123'
+        )
+        self.token = Token.objects.create(user=self.user)
+        self.client.credentials(HTTP_AUTHORIZATION=f'Token {self.token.key}')
 
-@pytest.fixture
-def create_itinerary(user):
-    return Itinerary.objects.create(
-        user=user,
-        name="Test Itinerary",
-        duration="2 00:00:00",
-        description="A test itinerary",
-        is_collaborative=True
-    )
+        # Define URL patterns
+        self.itineraries_list_url = reverse('itineraries-list')
+        self.itineraries_detail_url = 'itineraries-detail'
+        self.itineraries_add_collaborator_url = 'itineraries-add-collaborator'
+        self.itineraries_remove_collaborator_url = 'itineraries-remove-collaborator'
 
-@pytest.mark.django_db
-def test_create_itinerary(api_client, user):
-    token = Token.objects.create(user=user)
-    api_client.credentials(HTTP_AUTHORIZATION=f'Token {token.key}')
-    url = reverse('itineraries-list')
+        # Create an example itinerary
+        self.itinerary = Itinerary.objects.create(
+            user=self.user,
+            name="Test Itinerary",
+            duration="2 00:00:00",
+            description="A test itinerary",
+            is_collaborative=True
+        )
 
-    data = {
-        "name": "New Itinerary",
-        "duration": "1 00:00:00",
-        "description": "Test itinerary creation",
-        "is_collaborative": False
-    }
+class ItineraryTestCase(BaseTestCase):
 
-    response = api_client.post(url, data, format='json')
-    print(response.data)  # Imprime el contenido del error para depuración
-    assert response.status_code == status.HTTP_201_CREATED
+    def test_create_itinerary(self):
+        """
+        Given valid itinerary data
+        When creating a new itinerary
+        Then the itinerary should be created
+        And a 201 status code should be returned
+        """
+        data = {
+            "name": "New Itinerary",
+            "duration": "1 00:00:00",
+            "description": "Test itinerary creation",
+            "is_collaborative": False
+        }
 
-@pytest.mark.django_db
-def test_update_itinerary(api_client, user, create_itinerary):
-    token = Token.objects.create(user=user)
-    api_client.credentials(HTTP_AUTHORIZATION=f'Token {token.key}')
-    url = reverse('itineraries-detail', kwargs={'pk': create_itinerary.itin_id})
+        response = self.client.post(self.itineraries_list_url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Itinerary.objects.count(), 2)  # Ensure that there are now two itineraries
+        new_itinerary = Itinerary.objects.get(name="New Itinerary")
+        self.assertEqual(new_itinerary.user, self.user)  # Ensure the user is associated with the new itinerary
 
-    data = {
-        "name": "Updated Itinerary",
-        "duration": "1 12:00:00",  # Asegúrate de que este formato es correcto
-        "description": "Updated description",
-        "is_collaborative": True
-    }
+    def test_update_itinerary(self):
+        """
+        Given valid update data
+        When updating an existing itinerary
+        Then the itinerary should be updated
+        And a 200 status code should be returned
+        """
+        url = reverse(self.itineraries_detail_url, kwargs={'pk': self.itinerary.pk})
 
-    response = api_client.put(url, data, format='json')
-    print(response.data)  # Imprime el contenido del error para depuración
-    assert response.status_code == status.HTTP_200_OK
+        data = {
+            "name": "Updated Itinerary",
+            "duration": "1 12:00:00",
+            "description": "Updated description",
+            "is_collaborative": True
+        }
 
-@pytest.mark.django_db
-def test_delete_itinerary(api_client, user, create_itinerary):
-    token = Token.objects.create(user=user)
-    api_client.credentials(HTTP_AUTHORIZATION=f'Token {token.key}')
-    url = reverse('itineraries-detail', kwargs={'pk': create_itinerary.itin_id})
+        response = self.client.put(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-    response = api_client.delete(url)
-    assert response.status_code == status.HTTP_204_NO_CONTENT
-    assert Itinerary.objects.count() == 0
+    def test_delete_itinerary(self):
+        """
+        Given an existing itinerary
+        When deleting the itinerary
+        Then the itinerary should be deleted
+        And a 204 status code should be returned
+        """
+        url = reverse(self.itineraries_detail_url, kwargs={'pk': self.itinerary.pk})
 
-@pytest.mark.django_db
-def test_add_collaborator(api_client, user, create_itinerary):
-    collaborator = User.objects.create_user(username='collaborator', password='password123')
-    token = Token.objects.create(user=user)
-    api_client.credentials(HTTP_AUTHORIZATION=f'Token {token.key}')
-    url = reverse('itineraries-add-collaborator', kwargs={'pk': create_itinerary.itin_id})
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(Itinerary.objects.count(), 0)  # Ensure that no itineraries are left
 
-    data = {'email_or_username': collaborator.username}
-    response = api_client.post(url, data, format='json')
-    assert response.status_code == status.HTTP_200_OK
-    assert create_itinerary.collaborators.filter(id=collaborator.id).exists()
+class CollaboratorTestCase(BaseTestCase):
 
-@pytest.mark.django_db
-def test_remove_collaborator(api_client, user, create_itinerary):
-    collaborator = User.objects.create_user(username='collaborator', password='password123')
-    create_itinerary.collaborators.add(collaborator)
-    token = Token.objects.create(user=user)
-    api_client.credentials(HTTP_AUTHORIZATION=f'Token {token.key}')
-    url = reverse('itineraries-remove-collaborator', kwargs={'pk': create_itinerary.itin_id})
+    def test_add_collaborator(self):
+        """
+        Given a collaborator user
+        When adding the collaborator to an itinerary
+        Then the collaborator should be added
+        And a 200 status code should be returned
+        """
+        collaborator = User.objects.create_user(username='collaborator', password='password123')
+        data = {'email_or_username': collaborator.username}
+        url = reverse(self.itineraries_add_collaborator_url, kwargs={'pk': self.itinerary.pk})
 
-    data = {'email_or_username': collaborator.username}
-    response = api_client.post(url, data, format='json')
-    assert response.status_code == status.HTTP_200_OK
-    assert not create_itinerary.collaborators.filter(id=collaborator.id).exists()"""
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(self.itinerary.collaborators.filter(id=collaborator.id).exists())
+
+    def test_remove_collaborator(self):
+        """
+        Given a collaborator user added to an itinerary
+        When removing the collaborator from the itinerary
+        Then the collaborator should be removed
+        And a 200 status code should be returned
+        """
+        collaborator = User.objects.create_user(username='collaborator', password='password123')
+        self.itinerary.collaborators.add(collaborator)
+        data = {'email_or_username': collaborator.username}
+        url = reverse(self.itineraries_remove_collaborator_url, kwargs={'pk': self.itinerary.pk})
+
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertFalse(self.itinerary.collaborators.filter(id=collaborator.id).exists())
