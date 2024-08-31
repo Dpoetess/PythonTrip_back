@@ -14,6 +14,8 @@ from .serializer import ItinerarySerializer
 class ItineraryView(viewsets.ModelViewSet):
     queryset = Itinerary.objects.all()
     serializer_class = ItinerarySerializer
+    permission_classes = [permissions.IsAuthenticated]
+
 
     def get_permissions(self):
         if self.request.method == 'GET':

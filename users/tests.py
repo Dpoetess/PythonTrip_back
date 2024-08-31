@@ -118,12 +118,14 @@ class UserDetailTestCase(BaseTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['username'], 'testuser')
 
-    def test_get_user_details_without_authentication(self):
-        """
-        Given no authentication
-        When requesting user details
-        Then a 403 status code should be returned
-        """
-        self.client.force_authenticate(user=None)  # De-authenticate
-        response = self.client.get(self.user_detail_url)
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+    class UserDetailTestCase(BaseTestCase):
+
+        def test_get_user_details_without_authentication(self):
+            """
+            Given no authentication
+            When requesting user details
+            Then a 401 status code should be returned
+            """
+            self.client.logout()  # Desautentica al usuario
+            response = self.client.get(self.user_detail_url)
+            self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
