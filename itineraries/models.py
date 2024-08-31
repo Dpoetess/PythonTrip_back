@@ -7,7 +7,7 @@ class Itinerary(models.Model):
     itin_id = models.AutoField(primary_key=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='itineraries')
     name = models.CharField(max_length=255)
-    duration = models.DurationField()
+    duration = models.DurationField(null=True, blank=True)
     description = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     is_collaborative = models.BooleanField(default=False)

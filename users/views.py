@@ -4,8 +4,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
-from .serializer import RegisterSerializer, LoginSerializer
-
+from .serializer import RegisterSerializer, LoginSerializer, UserDetailSerializer
 
 class RegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
@@ -23,6 +22,7 @@ class UserLoginView(APIView):
 
             user = authenticate(request, username=username, password=password)
             if user:
+                Token.objects.filter(user=user).delete()
                 token, created = Token.objects.get_or_create(user=user)
                 return Response({'token': token.key}, status=status.HTTP_200_OK)
             else:
@@ -37,15 +37,19 @@ class LogoutView(views.APIView):
         try:
             token = Token.objects.get(user=request.user)
             token.delete()
-            return Response({"message": "Token deleted"}, status=status.HTTP_200_OK)
+            return Response({"message": "Successfully logged out."}, status=status.HTTP_200_OK)
         except Token.DoesNotExist:
             return Response({"message": "Token not found"}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class UserDetailView(generics.RetrieveAPIView):
     queryset = User.objects.all()
-    serializer_class = RegisterSerializer
+    serializer_class = UserDetailSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_object(self):
-        return self.request.user
+        user = self.request.user
+        if user.is_authenticated:
+            print(f"Authenticated user: {user}")
+            return user
+        return None

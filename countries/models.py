@@ -1,5 +1,6 @@
 from django.db import models
 
+
 class Country(models.Model):
     country_id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=255, default='Unnamed Country')
@@ -7,6 +8,8 @@ class Country(models.Model):
 
     def __str__(self):
         return self.iso_code
+
+
 class Location(models.Model):
     loc_id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=255)
@@ -17,13 +20,14 @@ class Location(models.Model):
     def __str__(self):
         return self.name
 
+
 class Attraction(models.Model):
     attr_id = models.AutoField(primary_key=True)
     attr_name = models.CharField(max_length=200)
     attr_description = models.TextField(blank=True, null=True)
     attr_category_id = models.IntegerField()
     attr_image_url = models.URLField(blank=True, null=True)
+    location = models.ForeignKey(Location, on_delete=models.CASCADE, related_name='attractions', null=True, blank=True)
 
     def __str__(self):
-        return self.name
-
+        return self.attr_name

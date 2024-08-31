@@ -67,25 +67,43 @@ class ItineraryView(viewsets.ModelViewSet):
                 Q(email=email_or_username) | Q(username=email_or_username)
             )
         except User.DoesNotExist:
-            raise NotFound("User with that email or username does not exist.")
+            if '@' in email_or_username:
+                # If it's an email, send invitation email to register
+                self.send_invitation_email(email_or_username, itinerary)
+                return Response({"status": "Invitation email sent to register."})
+            else:
+                raise NotFound("User with that email or username does not exist.")
 
         if request.user == itinerary.user or request.user in itinerary.collaborators.all():
             itinerary.collaborators.add(collaborator)
 
-            # Enviar correo electrónico al nuevo colaborador
-            subject = f"You hace been added as a collaborator on the itinerary '{itinerary.name}'"
-            message = f"Hello {collaborator.username},\n\n" \
-                      f"You have benn added as a collaborator on the itinerary '{itinerary.name}'.\n" \
-                      "You can access and collaborate on this itinerary from your account.\n\n" \
-                      "Greetings,\nItineraries' team"
-            from_email = 'josecarloslopezgomez1@gmail.com'
-            recipient_list = [collaborator.email]
+            self.send_collaboration_email(collaborator, itinerary)
 
-            send_mail(subject, message, from_email, recipient_list)
-
-            return Response({"status": "collaborator added"})
+            return Response({"status": "Collaborator added"})
         else:
             raise PermissionDenied("You are not allowed to add collaborators to this itinerary.")
+
+    def send_invitation_email(self, email, itinerary):
+        # Send an invitation email to register
+        subject = f"Invitation to collaborate on the itinerary '{itinerary.name}'"
+        message = f"Hello,\n\nYou have been invited to collaborate on the itinerary '{itinerary.name}' on our platform." \
+                  f"\nPlease register using this email address to collaborate.\n\nBest regards,\nItinerary Team"
+        from_email = 'your-email@example.com'
+        recipient_list = [email]
+        send_mail(subject, message, from_email, recipient_list)
+
+    def send_collaboration_email(self, collaborator, itinerary):
+            # Enviar correo electrónico al nuevo colaborador
+        subject = f"You have been added as a collaborator on the itinerary '{itinerary.name}'"
+        message = f"Hello {collaborator.username},\n\n" \
+                  f"You have benn added as a collaborator on the itinerary '{itinerary.name}'.\n" \
+                  f"You can access and collaborate on this itinerary from your account.\n\n" \
+                    "Greetings,\nItineraries' team"
+        from_email = 'josecarloslopezgomez1@gmail.com'
+        recipient_list = [collaborator.email]
+
+        send_mail(subject, message, from_email, recipient_list)
+
 
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
     def remove_collaborator(self, request, pk=None):
