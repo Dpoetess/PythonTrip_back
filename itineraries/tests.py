@@ -32,7 +32,6 @@ class BaseTestCase(APITestCase):
         self.itinerary = Itinerary.objects.create(
             user=self.user,
             name="Test Itinerary",
-            duration="2 00:00:00",
             description="A test itinerary",
             is_collaborative=True
         )
@@ -48,7 +47,6 @@ class ItineraryTestCase(BaseTestCase):
         """
         data = {
             "name": "New Itinerary",
-            "duration": "1 00:00:00",
             "description": "Test itinerary creation",
             "is_collaborative": False
         }
