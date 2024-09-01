@@ -7,7 +7,6 @@ class User(models.Model):
     email = models.EmailField(max_length=200, unique=True)
     password = models.CharField(max_length=9, null=False)
     preferences = models.JSONField(default=dict, blank=True)
-    #itinerary_id_itineraries = models.ManyToManyField('', related_name='users')
 
 
     def __str__(self):
