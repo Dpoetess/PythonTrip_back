@@ -116,6 +116,15 @@ DATABASES = {
     ```bash
     Pytest
     ```
+- Use Gherking test: Given, When Then
+    ```bash
+        """
+        Given valid user data
+        When registering a new user
+        Then the user should be created
+        And a 201 status code should be returned
+        """
+    ```
 ### Types of Tests Performed
 - **Integration test**: Check the interaction between different parts of the system, such as the database, views, and authentication. For example, when testing a user's registration (test_register_user), you are checking that the entire system works from start to finish, including creating the user in the database.
 
