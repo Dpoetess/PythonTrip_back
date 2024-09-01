@@ -16,7 +16,7 @@
 
 ## 📄 Project Description
 
-**Python Tryp** Pyton Tryp is a mobile travel recommendation application that allows users to select itineraries based on suggestions provided by the app and to generate personalised itineraries. Users will be able to create and manage collections of
+**Python Tryp** is a mobile travel recommendation application that allows users to select itineraries based on suggestions provided by the app and to generate personalised itineraries. Users will be able to create and manage collections of
 their favourite places, view: 
 
 ## 🎯 Motivation
@@ -28,16 +28,11 @@ Our motivation is to offer a clean and accessible design for the user with the p
 ### Python Tryp Users (CRUD Operations)
 - **Create**: Register new users in the application
 - **Read**: Search and browse itineraries by different criteria
-- **Update**: Updates information on itineraries and destinations
-- **Delete**: Remove user information
 - **Validation**: Ensure there are no duplicates in the itineraries by using appropriate validations. 
 
 ### User Preferences (CRUD Operations)
 - **Create**: Register preferences of destinations, locations, etc.
 - **Read**: View their stored preferences in a profile or settings page.
-- **Update**: Enable users to modify their existing trip preferences.
-- **Delete**:Allow users to remove specific preferences or reset all preferences.
-- **Validation**: Ensure there are no duplicates 
 
 ### User Management (CRUD Operations)
 - **Create**: Register new users in the application.
@@ -56,16 +51,24 @@ This project was developed by a team of 5 developers using SCRUM. Tools like Jir
 
 ## 🛠 Technologies Used
 
-- **Language**: Python (v3.12.4)
-- **Database**: PostgreSQL (v16.2)
-- **Testing**: Pytest (v8.3.2), Unittest (integrated with Python)
+- **Language**: Python (v3.12.4) 
+- **Database**: PostgreSQL (v16.2) 
+- **Testing**: Pytest, Unittest (integrated with Python)
 - **Version Control**: Git (v2.45.2) with GitFlow
-- **psycopg2**
-- **Pycharm**
+- **IDE**: Pycharm
 - **Django**
 - **Django REST Framework**
+- **Psycopg2-binary** 
 - **Drawio**
 
+Language: Python (v3.12.4)
+Database: PostgreSQL (v16.2)
+Testing: Jest (v29.7)
+Version Control: Git (v2.45.2) with GitFlow
+Agile Methodologies: SCRUM
+IDE: Visual Studio Code
+Frameworks: React, Django
+Design Tool: Figma
 
 ## 📦 Installation and Configuration
 
@@ -101,14 +104,14 @@ DATABASES = {
    ```
 5. **Perform the migrations and run server:**
     ```bash
-   python manage.py makemigrations
+    python manage.py makemigrations
     python manage.py migrate
     python manage.py runserver
     ```
    
 ## 🧪 Testing
 
-- **Run unit and integration tests:**
+- **Run integration tests:**
 
     ```bash
     Pytest
