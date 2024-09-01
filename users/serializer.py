@@ -2,7 +2,6 @@ from rest_framework import serializers
 from django.contrib.auth.models import User
 
 
-# Serializamos la data que trae ese objeto, en este caso el objeto User
 class RegisterSerializer(serializers.ModelSerializer):
     first_name = serializers.CharField(required=True),
     last_name = serializers.CharField(required=True),

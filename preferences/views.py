@@ -1,7 +1,7 @@
 from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
 from countries.models import Location
-from .models import Category, Preference
+from .models import Preference
 from .serializer import PreferenceSerializer
 
 
