@@ -1,5 +1,4 @@
 from rest_framework import viewsets, permissions
-from rest_framework.response import Response
 from .models import Country, Location, Attraction
 from .serializer import CountrySerializer, LocationSerializer, AttractionSerializer
 

@@ -25,18 +25,15 @@ class ItineraryView(viewsets.ModelViewSet):
         return super(ItineraryView, self).get_permissions()
 
     def perform_create(self, serializer):
-        # Automatically associate the itinerary with the logged-in user as the creator
         serializer.save(user=self.request.user)
 
     def perform_delete(self, instance):
-        # Check if the user is the owner of the itinerary before deleting
         if instance.user == self.request.user or self.request.user in instance.collaborators.all() or self.request.user.is_staff:
             instance.delete()
         else:
             raise PermissionDenied("You are not allowed to delete this itinerary.")
 
     def perform_update(self, serializer):
-         # Ensure that users can only update itineraries they created or collaborate on
         if serializer.instance.user == self.request.user or self.request.user in serializer.instance.collaborators.all():
             serializer.save()
         else:
@@ -86,7 +83,6 @@ class ItineraryView(viewsets.ModelViewSet):
             raise PermissionDenied("You are not allowed to add collaborators to this itinerary.")
 
     def send_invitation_email(self, email, itinerary):
-        # Send an invitation email to register
         subject = f"Invitation to collaborate on the itinerary '{itinerary.name}'"
         message = f"Hello,\n\nYou have been invited to collaborate on the itinerary '{itinerary.name}' on our platform." \
                   f"\nPlease register using this email address to collaborate.\n\nBest regards,\nItinerary Team"
@@ -95,7 +91,6 @@ class ItineraryView(viewsets.ModelViewSet):
         send_mail(subject, message, from_email, recipient_list)
 
     def send_collaboration_email(self, collaborator, itinerary):
-            # Enviar correo electrónico al nuevo colaborador
         subject = f"You have been added as a collaborator on the itinerary '{itinerary.name}'"
         message = f"Hello {collaborator.username},\n\n" \
                   f"You have benn added as a collaborator on the itinerary '{itinerary.name}'.\n" \
